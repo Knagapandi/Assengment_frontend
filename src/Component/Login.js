@@ -1,64 +1,51 @@
-import React, { useState,useContext } from 'react';
+import React, { useState } from 'react';
+import { Form, Input, Button, message } from 'antd';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from '../api/axios';
-import { useNavigate } from 'react-router-dom';
-// import { AuthContext } from '../context/AuthContext';
 
 const Login = () => {
-    // const { login } = useContext(AuthContext);
-    const navigate=useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onFinish = async (values) => {
+    setLoading(true);
     try {
-      const response = await axios.post('/users/login', formData);
-      alert("login Successfully");
-      console.log(response.data);
-      localStorage.setItem("userId",JSON.stringify(response.data.user));
-    //   login(response.data.user);
-    if(response.data.user.role==="admin"){
-        navigate('/video-player'); 
-    }
-    else{
-        navigate('/upload-video'); 
-    }
-
-
-     
+      const res = await axios.post('/login', values);
+      localStorage.setItem('token', res.data.token);
+      message.success('Logged in successfully');
+      navigate('/userslist');
     } catch (error) {
-        alert(error)
-      console.error(error);
-      
+      message.error('Username or password Incorrect');
     }
+    setLoading(false);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
-      <label>
-        Email:
-        <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-      </label>
-      <div>
-        <label>
-        Password:
-        <input type="password" name="password" value={formData.password} onChange={handleChange} required />
-      </label>
-      </div>
-      <div>
-      <button type="submit">Login</button>
-      </div>
-    </form>
+    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
+      <h2>Login Page</h2>
+      <Form name="login" onFinish={onFinish} layout="vertical">
+        <Form.Item
+          label="Email"
+          name="email"
+          rules={[{ required: true, message: 'Please input your email!' }]}
+        >
+          <Input placeholder="Email" />
+        </Form.Item>
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: 'Please input your password!' }]}
+        >
+          <Input.Password placeholder="Password" />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={loading} block>
+            Login
+          </Button>
+        </Form.Item>
+      </Form>
+      <p>Don't have an account? <Link to="/signup">Sign Up</Link></p>
+    </div>
   );
 };
 
